@@ -1,0 +1,189 @@
+#!/usr/bin/python3
+
+#Import All necessary third part and local modeules
+import os
+import hashlib
+import json
+import sys
+import subprocess
+
+#Define the main function
+def main(Currentdir):
+
+    #Get the push history of this file
+    global pushDB, newDB, pushTo, pushDir, dir
+
+    #Get the contents of directory
+    contents = os.listdir(Currentdir)
+
+    #Loop through the content
+    for file in contents:
+
+        #Get the complete path of file
+        path =  Currentdir + "/" + file
+
+        #Check if current content is file or diretory
+        if os.path.isdir(path):
+
+            #Add directory in newDB
+            newDB[path] = 'dir'
+
+            #Check if directory is present in pushDB
+            if path not in pushDB:
+
+                #Generate file path for remote server
+                file = path.replace(dir, "", 1);
+
+                #Command to create new directoty
+                command = "ssh root@{} 'mkdir {}/{}'".format(pushTo, pushDir, file)
+
+                #Create a new directoty in remote server
+                os.system(command);
+
+                #Print out new dict message
+                print("New directory created: " + path)
+            else:
+                #Remove path from newDB
+                del pushDB[path]
+
+            #Get the result back from subfiles inside subdirectories
+            result = main(path)
+
+            #Append subfiles newDB data with other files and subfiles
+            newDB.update(result[0])
+
+            #Set pushDB to new pushDB data
+            pushDB = result[1]
+
+        elif pushDB == "":
+
+            #Get the size of file in bytes
+            bytes = os.path.getsize(path)
+
+            #Generate the new hash
+            hash = hashlib.md5(open(path, "r").read(bytes).encode('utf-8')).hexdigest()
+
+            #Push files to remote serber
+            push(path)
+
+            #Add hash to newDB
+            newDB[path] = hash
+
+        else:
+
+            #Get changes if any
+            result = changes(path)
+
+            #Add hash to newDB
+            newDB[path] = result[0]
+
+            #Set the pushDB new results
+            pushDB      = result[1]
+
+    #Return Both newDB and pushDB
+    return [newDB, pushDB];
+
+
+
+#Function to check if files is changes or not
+def changes(file):
+
+    #Get the size of file in bytes
+    bytes = os.path.getsize(file)
+
+    #Generate the new hash
+    hash = hashlib.md5(open(file, "r").read(bytes).encode('utf-8')).hexdigest()
+
+    #Check if file is new
+    if file in dict(pushDB):
+
+        #Get the last hash
+        lastHash = pushDB[file]
+
+        #Compare last and new hash of file
+        if lastHash != hash:
+
+            #Push file to remote server
+            push(file)
+
+            #Print the modifiles message
+            print("file " + file + " modified")
+
+        #Delete file from pushDB
+        #Left over data will be treated as deleted server
+        del pushDB[file]
+
+    else:
+
+        push(file)
+
+        #Print out newly created files
+        print("New file " + file + " is created")
+
+    #Return hash and pushDB
+    return [hash, pushDB]
+
+
+
+#Function to push file to remote server
+def push(path):
+    #Get the ip address of remote server
+    global pushTo
+    global pushDir
+    global dir
+
+    #Get rid of baseDir from file
+    file = path.replace(dir, "", 1)
+
+    #Command to push files
+    command = "rsync {} root@{}:{}/{}".format(path, pushTo, pushDir, file)
+
+    #Push files to remote server
+    os.system(command)
+
+
+#Function to delete files on remote server
+def delete(files):
+
+    #Get the ip address of remote server
+    global pushTo
+    global pushDir
+    global dir
+
+    #Loop through the lists of files that need to be deleted
+    for file in files:
+
+        #Get rid of baseDir from file
+        path = pushDir + "/" + file.replace(dir, "", 1)
+
+        #Command to delete file from remoete server
+        command = "ssh root@{} 'rm -rf {}'".format(pushTo, path)
+
+        #Exec command against remote server
+        os.system(command)
+
+        print(file + " is deleted")
+
+
+def app(name):
+
+    #Config file name
+    file = "/home/oxcean/OxceanPush/app.json"
+
+    #Get the config file size
+    bytes = os.path.getsize(file)
+
+    #Get the configurations file
+    file = open(file, "r").read(bytes)
+
+    #Convert json to dict
+    conf = json.loads(file)
+
+    #Check if app exits in config file
+    try:
+        app = conf[name];
+    except:
+        exit("Error: Application configuratons does not exists");
+
+    return app
+
