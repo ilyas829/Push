@@ -1,0 +1,8 @@
+{
+  "oxcean": {
+    "server": "51.255.85.233",
+    "directory": "/var/hello/test",
+    "local": "/singh",
+    "database": "/home/oxcean/OxceanPush/push.json"
+  }
+}
