@@ -1,0 +1,51 @@
+#!/usr/bin/python3
+
+#Import Push module
+from push import *
+
+#Check if app name is provided
+try:
+    #Set app name
+    appName = sys.argv[1]
+except IndexError:
+
+    #Exit with error if no app name is provided
+    exit("Error: No argument is passed")
+
+#Execut app function to get further app info
+app = app(appName)
+
+#Set variable from config file
+pushTo  = app['server'];
+pushDir = app['directory'];
+dir     = app['local'];
+database= app['database'];
+
+
+#Open database file
+data  = open(database, "r");
+
+#Read database file
+read  = data.read(os.path.getsize(database))
+
+#Check if database file is empty or not
+if read != "":
+    pushDB = json.loads(read)
+else:
+    pushDB = ""
+
+#Set newDB directory
+newDB = {};
+
+#Execute the main function and get the result in variable
+result = main(dir)
+
+#Write Changes to the pushDB
+open(database, "w").write(str(json.dumps(result[0])));
+
+#Get the remaning files that need to be deleted
+remove = result[1];
+
+#Delete reaming files from remote server if any
+if bool(remove):
+    delete(remove)
