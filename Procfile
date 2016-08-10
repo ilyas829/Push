@@ -1,1 +1,1 @@
-
+web: cat app.json
