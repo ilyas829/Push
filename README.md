@@ -1,2 +1,2 @@
 # Push
-Push is a self hosted git!
+Push your changes to the production server
