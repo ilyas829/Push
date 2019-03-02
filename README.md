@@ -4,4 +4,4 @@ Push your changes to the production server
 
 Command - 
 
-push {{filename.json}}
+python3 push {{Application Name}}
