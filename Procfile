@@ -1,1 +1,2 @@
-web: python main runserver 0.0.0.0:80
+web: python main runserver 0.0.0.0:80 
+#python server
