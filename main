@@ -49,3 +49,4 @@ remove = result[1];
 #Delete reaming files from remote server if any
 if bool(remove):
     delete(remove)
+#End of program
